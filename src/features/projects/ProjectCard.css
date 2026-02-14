@@ -1,0 +1,35 @@
+.project-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.project-card-name {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--neon-cyan);
+}
+
+.project-card-link {
+    color: var(--text-secondary);
+    transition: color 0.3s;
+}
+
+.project-card-link:hover {
+    color: var(--neon-cyan);
+}
+
+.project-card-desc {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.project-card-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}

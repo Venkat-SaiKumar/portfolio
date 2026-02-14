@@ -1,0 +1,55 @@
+.education-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 24px;
+}
+
+.education-card-icon {
+    color: var(--neon-cyan);
+    margin-bottom: 16px;
+}
+
+.publication-icon {
+    color: var(--neon-purple);
+}
+
+.education-degree {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-bright);
+}
+
+.education-institution {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.education-meta {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+}
+
+.publication-results {
+    margin-top: 12px;
+}
+
+.pub-result {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.pub-result-bullet {
+    color: var(--neon-green);
+    margin-right: 6px;
+}
+
+@media (max-width: 768px) {
+    .education-grid {
+        grid-template-columns: 1fr;
+    }
+}

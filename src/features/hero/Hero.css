@@ -1,0 +1,137 @@
+.hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 20px 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-content {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    max-width: 1100px;
+    width: 100%;
+}
+
+.hero-left {
+    flex-shrink: 0;
+}
+
+.hero-right {
+    flex: 1;
+}
+
+.hero-greeting {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.hero-name {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.hero-title {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 24px;
+}
+
+.neon-text-cyan {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.hero-typing {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    padding: 16px 20px;
+    background: var(--bg-terminal);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: 32px;
+    color: var(--text-primary);
+}
+
+.hero-typing-prefix {
+    color: var(--neon-green);
+    margin-right: 8px;
+}
+
+.hero-typing-text {
+    color: var(--neon-cyan);
+}
+
+.hero-socials {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hero-social-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.hero-social-btn:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    color: var(--neon-cyan);
+    transform: translateY(-2px);
+}
+
+.hero-social-primary {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(180, 0, 255, 0.15));
+    border-color: rgba(0, 240, 255, 0.3);
+}
+
+.hero-scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    cursor: pointer;
+    color: var(--neon-cyan);
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.hero-scroll-indicator:hover {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 30px;
+    }
+
+    .hero-name {
+        font-size: 1.8rem;
+    }
+
+    .hero-title {
+        font-size: 1.2rem;
+    }
+
+    .hero-socials {
+        justify-content: center;
+    }
+}
