@@ -1,63 +1,82 @@
-.hexagon-container {
+.hex-wrapper {
     position: relative;
     width: 280px;
-    height: 310px;
+    height: 320px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.hexagon-glow {
+.hex-glow-svg {
     position: absolute;
-    width: 300px;
-    height: 330px;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-magenta));
-    opacity: 0.4;
-    filter: blur(20px);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
     animation: neonBorderGlow 3s ease-in-out infinite;
 }
 
-.hexagon-border {
+.hex-outer {
     position: relative;
-    width: 270px;
-    height: 300px;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-magenta));
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 250px;
+    height: 288px;
+    z-index: 1;
 }
 
-.hexagon-inner {
+.hex-border {
     width: 100%;
     height: 100%;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    overflow: hidden;
     background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
-.hexagon-inner img {
+.hex-photo {
+    width: 92%;
+    height: 92%;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    overflow: hidden;
+}
+
+.hex-photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center top;
 }
 
-@media (max-width: 768px) {
-    .hexagon-container {
-        width: 200px;
-        height: 230px;
-    }
+/* Ambient glow behind the hexagon */
+.hex-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 260px;
+    height: 300px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(180, 0, 255, 0.3), rgba(255, 0, 170, 0.3));
+    filter: blur(25px);
+    z-index: 0;
+    animation: neonBorderGlow 3s ease-in-out infinite;
+}
 
-    .hexagon-glow {
+@media (max-width: 768px) {
+    .hex-wrapper {
         width: 220px;
         height: 250px;
     }
 
-    .hexagon-border {
-        width: 190px;
-        height: 220px;
+    .hex-outer {
+        width: 195px;
+        height: 225px;
+    }
+
+    .hex-wrapper::before {
+        width: 200px;
+        height: 230px;
     }
 }
