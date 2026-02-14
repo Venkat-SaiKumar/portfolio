@@ -19,10 +19,12 @@
 
 .hero-left {
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .hero-right {
     flex: 1;
+    min-width: 0;
 }
 
 .hero-greeting {
