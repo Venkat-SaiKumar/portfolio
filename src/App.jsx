@@ -1,5 +1,7 @@
 import Navbar from './components/Navbar';
 import ParticleBackground from './components/ParticleBackground';
+import AlienSpaceship from './components/AlienSpaceship';
+import AlienCreatures from './components/AlienCreatures';
 import Hero from './features/hero/Hero';
 import About from './features/about/About';
 import Terminal from './features/terminal/Terminal';
@@ -15,6 +17,8 @@ export default function App() {
             <ParticleBackground />
             <div className="circuit-pattern" />
             <Navbar />
+            <AlienSpaceship />
+            <AlienCreatures />
             <main style={{ position: 'relative', zIndex: 1 }}>
                 <Hero />
                 <div className="section-divider" />
