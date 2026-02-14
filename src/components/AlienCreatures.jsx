@@ -108,7 +108,8 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId }) {
             const hitY = e.detail.y;
             const dist = Math.sqrt((hitX - cx) ** 2 + (hitY - cy) ** 2);
 
-            if (dist < 60) {
+            // Hit if within 25px radius — gotta aim!
+            if (dist < 25) {
                 // Get screen position before hiding
                 setHidden(true);
                 aliveRef.current = false;
