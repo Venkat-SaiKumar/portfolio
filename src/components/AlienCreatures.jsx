@@ -25,6 +25,27 @@ const CREATURE_TYPES = [
     { type: 'worm', actions: ['walking', 'idle', 'lookingAround', 'dancing', 'sitting'] },
 ];
 
+/* ============================================================
+   CREATURE VOICES — per-type speech for interactions
+   ============================================================ */
+const CREATURE_VOICES = {
+    humanoid: { greet: ['👋 Hey!', 'Sup!', 'Hello!', '✌️'], chat: ['Nice day!', '🌟 Cool!', 'Beep boop', '😄'], death: '😵 Nooo!', nearby: ['Howdy!', 'Oh hi!'] },
+    cyclops: { greet: ['👁️ Hi!', '*stares*', 'Yo!'], chat: ['See that?', 'One eye > two!', '🔭'], death: '😵 Ow!', nearby: ['*blinks*', 'Hey there!'] },
+    blob: { greet: ['~blorb~', '💧 Hiii', '*wobble*'], chat: ['*jiggle*', 'Gloop!', '~squishy~', '💦'], death: '💦 Splat!', nearby: ['~bounce~', '*squish*'] },
+    spacecat: { greet: ['😺 Meow!', 'Mew!', '*purr*'], chat: ['🐟 Fish?', '*stretch*', 'Purrr~', '😸'], death: '🙀 Hiss!', nearby: ['*sniff*', 'Mrrp?'] },
+    spacedog: { greet: ['🐕 Woof!', 'Bark bark!', '*pant*'], chat: ['🦴 Bone?', '*tail wag*', 'Arf!', '😛'], death: '😢 Yipe!', nearby: ['*sniff sniff*', 'Friend!!'] },
+    tentacle: { greet: ['🐙 Hello!', '*wave wave*', 'Blurb!'], chat: ['Tentacool!', '*wiggle*', '🌊'], death: '😰 Splurp!', nearby: ['*tentacle wave*', 'Ooh!'] },
+    robot: { greet: ['🤖 BEEP', '01001000', 'Greetings'], chat: ['Analyzing...', '⚡ Bzzt', '*scan*', '🔧'], death: '⚡ ERROR!', nearby: ['*scan*', 'Detected!'] },
+    ghost: { greet: ['👻 Boo!', '*floats by*', 'Ooo~'], chat: ['Spooky!', '*phases*', '~whooo~', '💀'], death: '💨 Poof!', nearby: ['~whooo~', '*appear*'] },
+    mushroom: { greet: ['🍄 Howdy!', '*bounces*', 'Hi hi!'], chat: ['Spore-tastic!', '🌱', '*wiggle cap*'], death: '🍄 Poof!', nearby: ['*spore puff*', 'Oh!'] },
+    slime: { greet: ['💚 Gloop!', '~ooze~', '*bubble*'], chat: ['*bubble pop*', 'Splorch!', '~drip~'], death: '💧 Melt!', nearby: ['~ooze~', '*bubble*'] },
+    lizard: { greet: ['🦎 Sss!', '*tongue flick*', 'Hey!'], chat: ['*bask*', 'Warm here!', '*tail whip*', '🌞'], death: '🦎 Argh!', nearby: ['*tongue flick*', 'Sss?'] },
+    monkey: { greet: ['🐒 Ooh ooh!', '*jumps*', 'Heya!'], chat: ['🍌 Banana?', '*scratch*', 'Eee!', '🎉'], death: '🐒 Eek!', nearby: ['*curious*', 'Ooh!'] },
+    bunny: { greet: ['🐰 *hop hop*', 'Squeak!', 'Hii!'], chat: ['🥕 Carrot?', '*nose twitch*', '*binky!*'], death: '🐰 Eep!', nearby: ['*nose wiggle*', 'Oh!'] },
+    spider: { greet: ['🕷 *clicks*', 'Hisss-hi!', '*wave legs*'], chat: ['Web time!', '*scuttle*', '🕸️'], death: '🕷 Skree!', nearby: ['*mandible click*', '*8 eyes blink*'] },
+    worm: { greet: ['🐛 Wiggle!', '*poke*', 'Hewwo!'], chat: ['*munch*', '🌱 Yum!', '*burrow*'], death: '🐛 Squish!', nearby: ['*wiggle*', '*poke up*'] },
+};
+
 function adjustColor(hex, amt) {
     const n = parseInt(hex.replace('#', ''), 16);
     const R = Math.max(0, Math.min(255, (n >> 16) + amt));
@@ -351,25 +372,91 @@ function FallingAlien({ x, y, color, creatureType, onDone }) {
 }
 
 /* ============================================================
-   BAR ALIEN — with personality traits for organic movement
+   BAR ALIEN — with personality, interactions & speech bubbles
    ============================================================ */
-function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creatureType, personality }) {
+function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creatureType, personality, positionsRef }) {
     const ref = useRef(null);
     const posRef = useRef(startPos);
     const [pos, setPos] = useState(startPos);
     const [action, setAction] = useState('idle');
     const [facingLeft, setFacingLeft] = useState(initFlip);
     const [hidden, setHidden] = useState(false);
+    const [bubble, setBubble] = useState(null);
     const timeoutRef = useRef(null);
+    const bubbleTimerRef = useRef(null);
     const aliveRef = useRef(true);
+    const interactCooldownRef = useRef(false);
     const dark = adjustColor(color, -50);
+    const scaleRef = useRef(0.9 + Math.random() * 0.2);
 
-    // Personality affects timing — each creature feels unique
     const { speed, energy, restiness } = personality;
-
+    const voices = CREATURE_VOICES[creatureType] || CREATURE_VOICES.humanoid;
     const typeConfig = CREATURE_TYPES.find(c => c.type === creatureType) || CREATURE_TYPES[0];
     const Body = BODY_MAP[creatureType] || HumanoidBody;
 
+    // Show a speech bubble for a duration
+    const showBubble = useCallback((msg, duration = 2200) => {
+        if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
+        setBubble(msg);
+        bubbleTimerRef.current = setTimeout(() => setBubble(null), duration);
+    }, []);
+
+    // Update shared position map
+    useEffect(() => {
+        if (positionsRef) {
+            positionsRef.current.set(alienId, { pos: posRef.current, type: creatureType, showBubble });
+        }
+        return () => { if (positionsRef) positionsRef.current.delete(alienId); };
+    }, [alienId, creatureType, positionsRef, showBubble]);
+
+    useEffect(() => {
+        if (positionsRef) {
+            positionsRef.current.set(alienId, { pos: posRef.current, type: creatureType, showBubble });
+        }
+    }, [pos]);
+
+    // Proximity interaction check
+    useEffect(() => {
+        if (!positionsRef) return;
+        const checkNearby = () => {
+            if (!aliveRef.current || hidden || interactCooldownRef.current) return;
+            const myPos = posRef.current;
+            for (const [id, data] of positionsRef.current) {
+                if (id === alienId) continue;
+                if (Math.abs(data.pos - myPos) < 12) {
+                    interactCooldownRef.current = true;
+                    // I greet them
+                    const roll = Math.random();
+                    let myMsg, theirMsg;
+                    if (roll < 0.4) {
+                        myMsg = voices.greet[Math.floor(Math.random() * voices.greet.length)];
+                        const theirVoices = CREATURE_VOICES[data.type] || CREATURE_VOICES.humanoid;
+                        theirMsg = theirVoices.greet[Math.floor(Math.random() * theirVoices.greet.length)];
+                    } else if (roll < 0.75) {
+                        myMsg = voices.chat[Math.floor(Math.random() * voices.chat.length)];
+                        const theirVoices = CREATURE_VOICES[data.type] || CREATURE_VOICES.humanoid;
+                        theirMsg = theirVoices.chat[Math.floor(Math.random() * theirVoices.chat.length)];
+                    } else {
+                        myMsg = voices.nearby[Math.floor(Math.random() * voices.nearby.length)];
+                        const theirVoices = CREATURE_VOICES[data.type] || CREATURE_VOICES.humanoid;
+                        theirMsg = theirVoices.nearby[Math.floor(Math.random() * theirVoices.nearby.length)];
+                    }
+                    showBubble(myMsg);
+                    // The other creature responds after a short delay
+                    setTimeout(() => {
+                        if (data.showBubble) data.showBubble(theirMsg);
+                    }, 600 + Math.random() * 400);
+                    // Cooldown before next interaction
+                    setTimeout(() => { interactCooldownRef.current = false; }, 8000 + Math.random() * 6000);
+                    break;
+                }
+            }
+        };
+        const interval = setInterval(checkNearby, 4000 + Math.random() * 3000);
+        return () => clearInterval(interval);
+    }, [hidden, alienId, positionsRef, voices, showBubble]);
+
+    // Movement behavior
     useEffect(() => {
         aliveRef.current = true;
         let actionCount = 0;
@@ -379,11 +466,9 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creature
             actionCount++;
 
             const roll = Math.random();
-            // Energetic creatures walk more, lazy ones rest more
             const walkChance = 0.3 + (energy * 0.3);
 
             if (roll < walkChance) {
-                // Walk — distance varies, short hops and long treks
                 const walkDist = (8 + Math.random() * 40) * (Math.random() > 0.7 ? 2 : 1);
                 const dir = Math.random() > 0.5 ? 1 : -1;
                 let newPos = posRef.current + (walkDist * dir);
@@ -394,18 +479,15 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creature
                 setAction('walking');
                 setPos(newPos);
 
-                // Walk duration based on distance + personality speed
                 const dist = Math.abs(walkDist);
                 const walkTime = (1500 + dist * 40) / speed;
 
                 timeoutRef.current = setTimeout(() => {
                     if (!aliveRef.current) return;
                     setAction('idle');
-                    // Natural pause — restier creatures pause longer
                     const pauseTime = (300 + Math.random() * 800) * restiness;
                     timeoutRef.current = setTimeout(() => {
                         if (!aliveRef.current) return;
-                        // Sometimes do another action, sometimes walk again right away
                         if (Math.random() < 0.6) {
                             const acts = typeConfig.actions.filter(a => a !== 'walking');
                             const act = acts[Math.floor(Math.random() * acts.length)];
@@ -418,12 +500,10 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creature
                     }, pauseTime);
                 }, walkTime);
             } else if (roll < walkChance + 0.15 && actionCount > 2) {
-                // Occasional long rest — makes them feel alive
                 setAction('idle');
                 const restTime = (4000 + Math.random() * 5000) * restiness;
                 timeoutRef.current = setTimeout(doNextThing, restTime);
             } else {
-                // Do a random action
                 const acts = typeConfig.actions.filter(a => a !== 'walking');
                 const act = acts[Math.floor(Math.random() * acts.length)];
                 setAction(act);
@@ -432,7 +512,6 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creature
             }
         };
 
-        // Staggered start — creatures don't all start at once
         timeoutRef.current = setTimeout(doNextThing, 500 + Math.random() * 3000);
 
         return () => {
@@ -441,6 +520,7 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creature
         };
     }, [hidden, speed, energy, restiness]);
 
+    // Laser hit detection + death sound
     useEffect(() => {
         const handleLaserHit = (e) => {
             if (hidden || !ref.current) return;
@@ -450,23 +530,40 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creature
             const dist = Math.sqrt((e.detail.x - cx) ** 2 + (e.detail.y - cy) ** 2);
 
             if (dist < 25) {
-                setHidden(true);
-                aliveRef.current = false;
-                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                onHit(alienId, cx, cy, color, creatureType);
-                document.dispatchEvent(new CustomEvent('alien-killed'));
+                // Death sound bubble — broadcast to nearby aliens
+                showBubble(voices.death, 1500);
+                // Notify nearby aliens to react
+                if (positionsRef) {
+                    for (const [id, data] of positionsRef.current) {
+                        if (id === alienId) continue;
+                        if (Math.abs(data.pos - posRef.current) < 25) {
+                            const theirVoices = CREATURE_VOICES[data.type] || CREATURE_VOICES.humanoid;
+                            const reactions = ['😱 Oh no!', '😰 Run!', '🫣 Yikes!', '😢'];
+                            const react = reactions[Math.floor(Math.random() * reactions.length)];
+                            setTimeout(() => {
+                                if (data.showBubble) data.showBubble(react, 2000);
+                            }, 300);
+                        }
+                    }
+                }
+
+                setTimeout(() => {
+                    setHidden(true);
+                    aliveRef.current = false;
+                    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    onHit(alienId, cx, cy, color, creatureType);
+                    document.dispatchEvent(new CustomEvent('alien-killed'));
+                }, 200);
             }
         };
 
         document.addEventListener('laser-hit', handleLaserHit);
         return () => document.removeEventListener('laser-hit', handleLaserHit);
-    }, [hidden, onHit, alienId, color, creatureType]);
+    }, [hidden, onHit, alienId, color, creatureType, voices, positionsRef, showBubble]);
 
     if (hidden) return null;
 
-    // CSS variables for per-creature animation speed variation
-    const speedVar = 0.7 + speed * 0.6; // 0.7–1.3
-    const scaleVar = 0.9 + Math.random() * 0.2; // 0.9–1.1 slight size variation
+    const speedVar = 0.7 + speed * 0.6;
 
     return (
         <div
@@ -477,19 +574,37 @@ function BarAlien({ color, startPos, flipped: initFlip, onHit, alienId, creature
                 '--alien-dark': dark,
                 '--alien-glow': color + '80',
                 '--speed': speedVar,
-                '--scale': scaleVar,
                 '--blink-delay': `${2 + Math.random() * 6}s`,
                 left: `${pos}%`,
-                transform: `scale(${scaleVar})`,
+                transform: `scale(${scaleRef.current})`,
             }}
         >
+            {bubble && <div className="creature-bubble" key={bubble}>{bubble}</div>}
             <Body />
         </div>
     );
 }
 
-function AlienRow({ children }) {
-    return <div className="alien-bar-row">{children}</div>;
+/* AlienGroup — wraps aliens on a bar with shared position tracking */
+function AlienGroup({ aliens, onHit }) {
+    const positionsRef = useRef(new Map());
+    return (
+        <div className="alien-bar-row">
+            {aliens.map(a => (
+                <BarAlien
+                    key={a.id}
+                    alienId={a.id}
+                    color={a.color}
+                    startPos={a.startPos}
+                    flipped={a.flipped}
+                    creatureType={a.creatureType}
+                    personality={a.personality}
+                    positionsRef={positionsRef}
+                    onHit={onHit}
+                />
+            ))}
+        </div>
+    );
 }
 
 /* ============================================================
@@ -574,20 +689,11 @@ export default function AlienCreatures() {
         <>
             {groups.map(group =>
                 createPortal(
-                    <AlienRow key={group.id}>
-                        {group.aliens.map(a => (
-                            <BarAlien
-                                key={a.id}
-                                alienId={a.id}
-                                color={a.color}
-                                startPos={a.startPos}
-                                flipped={a.flipped}
-                                creatureType={a.creatureType}
-                                personality={a.personality}
-                                onHit={handleAlienHit}
-                            />
-                        ))}
-                    </AlienRow>,
+                    <AlienGroup
+                        key={group.id}
+                        aliens={group.aliens}
+                        onHit={handleAlienHit}
+                    />,
                     group.el
                 )
             )}
