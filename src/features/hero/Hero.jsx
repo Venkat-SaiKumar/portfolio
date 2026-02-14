@@ -11,7 +11,7 @@ export default function Hero() {
         <section id="hero" className="hero">
             <div className="hero-content">
                 <div className="hero-left">
-                    <HexagonPhoto src={profileData.personal.photo} alt={profileData.personal.name} />
+                    <HexagonPhoto src={`${import.meta.env.BASE_URL}photo.png`} alt={profileData.personal.name} />
                 </div>
                 <div className="hero-right">
                     <div className="hero-greeting">
