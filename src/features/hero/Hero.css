@@ -35,10 +35,12 @@
 }
 
 .hero-name {
-    font-size: 2.8rem;
+    font-size: 2.2rem;
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: 8px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .hero-title {
